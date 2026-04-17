@@ -1,0 +1,23 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model fact_sales {
+  order_id                 String
+  order_item_id            Int
+  product_id               String
+  customer_id              String
+  item_price               Float
+  freight_value            Float
+  payment_value_allocated  Float
+  is_canceled              Int
+  is_delivered             Int
+  is_on_time               Int
+  order_date               DateTime
+
+  @@id([order_id, order_item_id])
+}
