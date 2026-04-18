@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   db:
     image: postgres:15
@@ -24,6 +22,7 @@ services:
       - db
     volumes:
       - ./backend:/app
+      - /app/node_modules
     command: npm run dev
 
   frontend:
@@ -35,6 +34,7 @@ services:
       - backend
     volumes:
       - ./frontend:/app
+      - /app/node_modules
     command: npm run dev
 
 volumes:

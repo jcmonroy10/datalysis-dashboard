@@ -1,8 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient({
-  datasourceUrl: process.env.DATABASE_URL,
-});
+const prisma = new PrismaClient();
 
 export async function getKpis(from: string, to: string) {
   const result = await prisma.$queryRawUnsafe(`
