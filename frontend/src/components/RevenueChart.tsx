@@ -7,19 +7,60 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
+  CartesianGrid,
 } from "recharts";
 
 export default function RevenueChart({ data }: any) {
-  return (
-    <div className="bg-white p-6 rounded-2xl shadow mt-6">
-      <h2 className="mb-4 font-semibold">Revenue Trend</h2>
+  if (!data || data.length === 0) {
+    return (
+      <div className="h-[300px] flex items-center justify-center text-sm text-gray-500">
+        No data available
+      </div>
+    );
+  }
 
-      <ResponsiveContainer width="100%" height={300}>
+  return (
+    <div className="w-full h-[300px]">
+      <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data}>
-          <XAxis dataKey="period" />
-          <YAxis />
-          <Tooltip />
-          <Line type="monotone" dataKey="revenue" />
+          {/* grid suave */}
+          <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+
+          {/* eje X */}
+          <XAxis
+            dataKey="period"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: 12, fill: "#9ca3af" }}
+          />
+
+          {/* eje Y */}
+          <YAxis
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: 12, fill: "#9ca3af" }}
+          />
+
+          {/* tooltip moderno */}
+          <Tooltip
+            contentStyle={{
+              backgroundColor: "#111827",
+              border: "none",
+              borderRadius: "10px",
+              color: "#fff",
+            }}
+            labelStyle={{ color: "#9ca3af" }}
+          />
+
+          {/* línea */}
+          <Line
+            type="monotone"
+            dataKey="revenue"
+            stroke="#6366f1"
+            strokeWidth={2}
+            dot={false}
+            activeDot={{ r: 5 }}
+          />
         </LineChart>
       </ResponsiveContainer>
     </div>
