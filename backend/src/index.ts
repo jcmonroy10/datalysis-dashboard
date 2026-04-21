@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from "cors";
 import { kpisHandler } from './adapters/http/kpis.controller';
 import { topProductsHandler } from './adapters/http/topProducts.controller';
 import { salesByStateHandler } from './adapters/http/salesByState.controller';
@@ -15,6 +16,7 @@ app.use(express.json());
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
+app.use(cors());
 
 app.get('/filters/options', asyncHandler(filterOptionsHandler));
 app.get('/kpis', validateDateRange, asyncHandler(kpisHandler));
