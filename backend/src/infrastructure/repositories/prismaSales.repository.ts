@@ -1,8 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../db/prisma';
 import { SalesRepository } from '../../domain/repositories/sales.repository';
 import { buildFilters } from '../db/buildFilters';
-
-const prisma = new PrismaClient();
 
 export class PrismaSalesRepository implements SalesRepository {
 
@@ -27,19 +25,18 @@ export class PrismaSalesRepository implements SalesRepository {
 
         CASE 
           WHEN COUNT(DISTINCT f.order_id) = 0 THEN 0
-          ELSE COUNT(f.order_item_id)::decimal / COUNT(DISTINCT f.order_id)
+          ELSE COUNT(f.order_item_id)::decimal / NULLIF(COUNT(DISTINCT f.order_id),0)
         END AS ipo,
 
         CASE 
           WHEN COUNT(DISTINCT f.order_id) = 0 THEN 0
-          ELSE 
-            COUNT(DISTINCT CASE WHEN f.is_canceled = 1 THEN f.order_id END)::decimal
-            / COUNT(DISTINCT f.order_id)
+          ELSE COUNT(DISTINCT CASE WHEN f.is_canceled = 1 THEN f.order_id END)::decimal
+              / NULLIF(COUNT(DISTINCT f.order_id),0)
         END AS cancel_rate,
 
         CASE 
           WHEN SUM(f.is_delivered) = 0 THEN 0
-          ELSE SUM(f.is_on_time)::decimal / SUM(f.is_delivered)
+          ELSE SUM(f.is_on_time)::decimal / NULLIF(SUM(f.is_delivered),0)
         END AS on_time_rate
 
       FROM gold.fact_sales f
