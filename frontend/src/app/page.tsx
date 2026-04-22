@@ -16,7 +16,6 @@ import {
   fetchTopProducts,
 } from "../lib/api";
 
-import KpiCard from "../components/KpiCard";
 import Filters from "../components/Filters";
 import RevenueChart from "../components/RevenueChart";
 import TopProductsTable from "../components/TopProductsTable";
@@ -58,8 +57,7 @@ export default function Home() {
         setTrend(Array.isArray(trendData) ? trendData : []);
         setTop(Array.isArray(topData) ? topData : []);
       })
-      .catch((err) => {
-        console.error(err);
+      .catch(() => {
         setError("Error cargando datos del dashboard");
         setKpi({});
         setTrend([]);
@@ -119,9 +117,8 @@ export default function Home() {
           </div>
         )}
 
-        {/* KPI GRID */}
+        {/* KPI */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-
           {loading ? (
             Array.from({ length: 4 }).map((_, i) => (
               <div
@@ -131,58 +128,70 @@ export default function Home() {
             ))
           ) : (
             <>
-              <KpiCard title="GMV" value={formatCurrency(kpi?.gmv)} icon={<DollarSign className="w-4 h-4 text-emerald-500" />} />
-              <KpiCard title="Revenue" value={formatCurrency(kpi?.revenue)} icon={<TrendingUp className="w-4 h-4 text-blue-500" />} />
-              <KpiCard title="Orders" value={formatNumber(kpi?.orders)} icon={<ShoppingCart className="w-4 h-4 text-purple-500" />} />
-              <KpiCard title="AOV" value={formatCurrency(kpi?.aov)} icon={<Package className="w-4 h-4 text-orange-500" />} />
+              <div className="rounded-xl border p-5 bg-white dark:bg-zinc-950">
+                GMV <div className="text-xl">{formatCurrency(kpi?.gmv)}</div>
+              </div>
+
+              <div className="rounded-xl border p-5 bg-white dark:bg-zinc-950">
+                Revenue <div className="text-xl">{formatCurrency(kpi?.revenue)}</div>
+              </div>
+
+              <div className="rounded-xl border p-5 bg-white dark:bg-zinc-950">
+                Orders <div className="text-xl">{formatNumber(kpi?.orders)}</div>
+              </div>
+
+              <div className="rounded-xl border p-5 bg-white dark:bg-zinc-950">
+                AOV <div className="text-xl">{formatCurrency(kpi?.aov)}</div>
+              </div>
             </>
           )}
         </div>
 
-        {/* EMPTY STATE */}
+        {/* EMPTY */}
         {hasNoData && (
           <div className="text-center py-20 text-sm text-gray-500">
             No data available for selected filters
           </div>
         )}
 
-        {/* MAIN GRID */}
+        {/* MAIN GRID (FIX DEFINITIVO LAYOUT) */}
         {!hasNoData && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-w-0">
 
-            {/* CHART (FIX DEFINITIVO) */}
-            <div className="bg-white dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm min-h-[320px]">
-
-              <div className="text-sm font-medium mb-4 text-gray-700 dark:text-gray-200 flex items-center gap-2">
+            {/* CHART */}
+            <div className="bg-white dark:bg-zinc-950 border rounded-xl p-6 shadow-sm flex flex-col">
+              <div className="text-sm font-medium mb-4 flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-blue-500" />
                 Revenue Trend
               </div>
 
-              {/* SIEMPRE MONTADO */}
-              <div className="h-[260px] w-full">
-                <RevenueChart data={trend} loading={loading} />
+              {/* sin flex-1 ni min-h-0, solo deja que el chart defina su altura */}
+              <div className="w-full">
+                <RevenueChart data={trend} />
               </div>
-
             </div>
 
             {/* TABLE */}
-            <div className="bg-white dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm min-h-[320px]">
+            <div className="bg-white dark:bg-zinc-950 border rounded-xl p-6 shadow-sm h-[420px] flex flex-col">
 
-              <div className="text-sm font-medium mb-4 text-gray-700 dark:text-gray-200 flex items-center gap-2">
+              <div className="text-sm font-medium mb-4 flex items-center gap-2">
                 <Package className="w-4 h-4 text-indigo-500" />
                 Top Products
               </div>
 
-              {loading ? (
-                <div className="h-64 rounded-lg bg-gray-100 dark:bg-zinc-900 animate-pulse" />
-              ) : (
-                <TopProductsTable data={top} />
-              )}
+              <div className="flex-1 overflow-auto">
+                {loading ? (
+                  <div className="h-64 bg-gray-100 dark:bg-zinc-900 animate-pulse rounded-lg" />
+                ) : (
+                  <TopProductsTable data={top} />
+                )}
+              </div>
 
             </div>
 
           </div>
         )}
+
       </div>
     </div>
   );
