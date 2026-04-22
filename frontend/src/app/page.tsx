@@ -146,13 +146,17 @@ export default function Home() {
     setTableLoading(true);
 
     fetchTopProducts(debouncedTopQuery)
-      .then((data) => {
-        if (!isMounted) return;
-        setTop(Array.isArray(data) ? data : []);
-      })
-      .finally(() => {
-        if (isMounted) setTableLoading(false);
-      });
+    .then((data) => {
+      if (!isMounted) return;
+      setTop(Array.isArray(data) ? data : []);
+    })
+    .catch(() => {
+      if (!isMounted) return;
+      setError("Error cargando top productos");
+    })
+    .finally(() => {
+      if (isMounted) setTableLoading(false);
+    });
 
     return () => { isMounted = false; };
   }, [debouncedTopQuery]);

@@ -30,7 +30,10 @@ export class PrismaSalesRepository implements SalesRepository {
 
         CASE 
           WHEN COUNT(DISTINCT f.order_id) = 0 THEN 0
-          ELSE COUNT(DISTINCT CASE WHEN f.is_canceled = 1 THEN f.order_id END)::decimal
+          ELSE COUNT(DISTINCT CASE 
+                WHEN o.order_status IN ('canceled', 'unavailable') 
+                THEN f.order_id 
+              END)::decimal
               / NULLIF(COUNT(DISTINCT f.order_id),0)
         END AS cancel_rate,
 
@@ -154,27 +157,36 @@ export class PrismaSalesRepository implements SalesRepository {
 
   async getFilterOptions() {
     const states = await prisma.$queryRaw<
-        { customer_state: string }[]
+      { customer_state: string }[]
     >`
-        SELECT DISTINCT customer_state FROM gold.dim_customer ORDER BY customer_state
+      SELECT DISTINCT c.customer_state
+      FROM gold.fact_sales f
+      JOIN gold.dim_customer c ON f.customer_id = c.customer_id
+      ORDER BY c.customer_state
     `;
 
     const categories = await prisma.$queryRaw<
-        { product_category_name: string }[]
+      { product_category_name: string }[]
     >`
-        SELECT DISTINCT product_category_name FROM gold.dim_product ORDER BY product_category_name
+      SELECT DISTINCT p.product_category_name
+      FROM gold.fact_sales f
+      JOIN gold.dim_product p ON f.product_id = p.product_id
+      ORDER BY p.product_category_name
     `;
 
     const statuses = await prisma.$queryRaw<
-        { order_status: string }[]
+      { order_status: string }[]
     >`
-        SELECT DISTINCT order_status FROM gold.dim_order ORDER BY order_status
+      SELECT DISTINCT o.order_status
+      FROM gold.fact_sales f
+      JOIN gold.dim_order o ON f.order_id = o.order_id
+      ORDER BY o.order_status
     `;
 
     return {
-        states,
-        categories,
-        statuses,
+      states,
+      categories,
+      statuses,
     };
-    }
+  }
 }

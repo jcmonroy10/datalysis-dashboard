@@ -42,8 +42,6 @@ function Dropdown({ label, value = [], options = [], onChange, icon: Icon }: any
 
   return (
     <div ref={ref} className="relative min-w-[180px]">
-
-      {/* trigger */}
       <button
         onClick={() => setOpen((prev) => !prev)}
         className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:bg-gray-50 dark:hover:bg-zinc-900 transition"
@@ -56,11 +54,9 @@ function Dropdown({ label, value = [], options = [], onChange, icon: Icon }: any
               : label}
           </span>
         </div>
-
         <ChevronDown className="w-4 h-4 text-gray-400" />
       </button>
 
-      {/* menu */}
       <div
         className={`
           absolute z-50 mt-2 w-full rounded-xl border 
@@ -70,7 +66,6 @@ function Dropdown({ label, value = [], options = [], onChange, icon: Icon }: any
           ${open ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"}
         `}
       >
-        {/* SEARCH */}
         <div className="p-2 border-b border-gray-200 dark:border-zinc-800">
           <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-gray-100 dark:bg-zinc-900">
             <Search className="w-4 h-4 text-gray-400" />
@@ -85,8 +80,6 @@ function Dropdown({ label, value = [], options = [], onChange, icon: Icon }: any
         </div>
 
         <div className="max-h-60 overflow-auto">
-
-          {/* ALL */}
           <div
             onClick={() => {
               onChange([]);
@@ -98,10 +91,8 @@ function Dropdown({ label, value = [], options = [], onChange, icon: Icon }: any
             All
           </div>
 
-          {/* OPTIONS */}
           {filteredOptions.map((opt: any, i: number) => {
             const isSelected = value?.includes(opt.value);
-
             return (
               <div
                 key={i}
@@ -112,22 +103,14 @@ function Dropdown({ label, value = [], options = [], onChange, icon: Icon }: any
                 }}
                 className="px-3 py-2 text-sm flex items-center justify-between hover:bg-gray-100 dark:hover:bg-zinc-900 cursor-pointer"
               >
-                <span className="text-gray-700 dark:text-gray-200">
-                  {opt.label}
-                </span>
-
-                {isSelected && (
-                  <Check className="w-4 h-4 text-indigo-500" />
-                )}
+                <span className="text-gray-700 dark:text-gray-200">{opt.label}</span>
+                {isSelected && <Check className="w-4 h-4 text-indigo-500" />}
               </div>
             );
           })}
 
-          {/* SIN RESULTADOS */}
           {filteredOptions.length === 0 && (
-            <div className="px-3 py-2 text-sm text-gray-400">
-              No results found
-            </div>
+            <div className="px-3 py-2 text-sm text-gray-400">No results found</div>
           )}
         </div>
       </div>
@@ -143,42 +126,43 @@ export default function Filters({ onChange, onClear, initialValues }: any) {
     status: [] as string[],
   });
 
-  // ✅ Para evitar llamar onChange en el primer render
   const isFirstRender = useRef(true);
 
   useEffect(() => {
     fetchFilters().then(setOptions);
   }, []);
 
+  // ✅ FIX: compara antes de setSelected para evitar infinite loop
   useEffect(() => {
-    if (initialValues) {
-      setSelected({
-        state: Array.isArray(initialValues.state)
-          ? initialValues.state
-          : initialValues.state
-          ? [initialValues.state]
-          : [],
-        category: Array.isArray(initialValues.category)
-          ? initialValues.category
-          : initialValues.category
-          ? [initialValues.category]
-          : [],
-        status: Array.isArray(initialValues.status)
-          ? initialValues.status
-          : initialValues.status
-          ? [initialValues.status]
-          : [],
-      });
-    }
+    if (!initialValues) return;
+
+    const newState = Array.isArray(initialValues.state)
+      ? initialValues.state
+      : initialValues.state ? [initialValues.state] : [];
+    const newCategory = Array.isArray(initialValues.category)
+      ? initialValues.category
+      : initialValues.category ? [initialValues.category] : [];
+    const newStatus = Array.isArray(initialValues.status)
+      ? initialValues.status
+      : initialValues.status ? [initialValues.status] : [];
+
+    setSelected((prev) => {
+      const sameState    = JSON.stringify(prev.state)    === JSON.stringify(newState);
+      const sameCategory = JSON.stringify(prev.category) === JSON.stringify(newCategory);
+      const sameStatus   = JSON.stringify(prev.status)   === JSON.stringify(newStatus);
+
+      // Si no cambió nada, devuelve el mismo objeto → React no re-renderiza
+      if (sameState && sameCategory && sameStatus) return prev;
+
+      return { state: newState, category: newCategory, status: newStatus };
+    });
   }, [initialValues]);
 
-  // ✅ onChange se llama aquí, nunca durante el render
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
     }
-
     onChange("state", selected.state);
     onChange("category", selected.category);
     onChange("status", selected.status);
@@ -187,19 +171,13 @@ export default function Filters({ onChange, onClear, initialValues }: any) {
   const format = (t: string) =>
     t?.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
 
-  // ✅ handle ya no llama onChange — solo actualiza selected
   const handle = (key: string, value: string) => {
     setSelected((prev: any) => {
       const exists = prev[key].includes(value);
-
       const updated = exists
         ? prev[key].filter((v: string) => v !== value)
         : [...prev[key], value];
-
-      return {
-        ...prev,
-        [key]: updated,
-      };
+      return { ...prev, [key]: updated };
     });
   };
 
@@ -210,7 +188,6 @@ export default function Filters({ onChange, onClear, initialValues }: any) {
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-
       <Dropdown
         label="State"
         value={selected.state}
@@ -221,7 +198,6 @@ export default function Filters({ onChange, onClear, initialValues }: any) {
         }))}
         onChange={(v: string) => handle("state", v)}
       />
-
       <Dropdown
         label="Category"
         value={selected.category}
@@ -232,7 +208,6 @@ export default function Filters({ onChange, onClear, initialValues }: any) {
         }))}
         onChange={(v: string) => handle("category", v)}
       />
-
       <Dropdown
         label="Status"
         value={selected.status}
@@ -243,15 +218,12 @@ export default function Filters({ onChange, onClear, initialValues }: any) {
         }))}
         onChange={(v: string) => handle("status", v)}
       />
-
-      {/* CLEAR */}
       <button
         onClick={handleClear}
         className="px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-900 transition"
       >
         Clear
       </button>
-
     </div>
   );
 }

@@ -6,17 +6,22 @@ import { serializeBigInt } from "../../utils/serialize";
 const repo = new PrismaSalesRepository();
 
 export async function revenueTrendHandler(req: Request, res: Response) {
-  const { from, to, grain, state, category, status } = req.query;
+  const { from, to, grain } = req.query;
 
-  const filters = { state, category, status };
+  const toArray = (val: any): string[] => {
+    if (!val) return [];
+    if (Array.isArray(val)) return (val as string[]).filter(Boolean);
+    if (typeof val === "string") return val.split(",").filter(Boolean);
+    return [];
+  };
 
-  const data = await getRevenueTrend(
-    repo,
-    from as string,
-    to as string,
-    (grain as string) || "day",
-    filters
-  );
+  const filters = {
+    state:    toArray(req.query.state),
+    category: toArray(req.query.category),
+    status:   toArray(req.query.status),
+  };
+
+  const data = await getRevenueTrend(repo, from as string, to as string, (grain as string) || "day", filters);
 
   const normalized = serializeBigInt(data);
 
