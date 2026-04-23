@@ -1,4 +1,4 @@
-import { SalesRepository } from '../../domain/repositories/sales.repository';
+import { SalesRepository } from "../../domain/repositories/sales.repository";
 
 export async function getSalesByState(
   repo: SalesRepository,

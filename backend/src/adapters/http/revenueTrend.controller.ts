@@ -16,12 +16,18 @@ export async function revenueTrendHandler(req: Request, res: Response) {
   };
 
   const filters = {
-    state:    toArray(req.query.state),
+    state: toArray(req.query.state),
     category: toArray(req.query.category),
-    status:   toArray(req.query.status),
+    status: toArray(req.query.status),
   };
 
-  const data = await getRevenueTrend(repo, from as string, to as string, (grain as string) || "day", filters);
+  const data = await getRevenueTrend(
+    repo,
+    from as string,
+    to as string,
+    (grain as string) || "day",
+    filters
+  );
 
   const normalized = serializeBigInt(data);
 

@@ -1,7 +1,6 @@
 import { buildFilters } from "../../infrastructure/db/buildFilters";
 
 describe("buildFilters", () => {
-
   it("returns empty conditions and params when filters are empty", () => {
     const { conditions, params } = buildFilters({}, 3);
     expect(conditions).toHaveLength(0);
@@ -15,10 +14,7 @@ describe("buildFilters", () => {
   });
 
   it("builds IN clause for multiple status values", () => {
-    const { conditions, params } = buildFilters(
-      { status: ["delivered", "canceled"] },
-      3
-    );
+    const { conditions, params } = buildFilters({ status: ["delivered", "canceled"] }, 3);
     expect(conditions).toContain("o.order_status IN ($3,$4)");
     expect(params).toEqual(["delivered", "canceled"]);
   });
@@ -47,5 +43,4 @@ describe("buildFilters", () => {
     expect(conditions).toContain("o.order_status IN ($3)");
     expect(params).toEqual(["canceled"]);
   });
-
 });

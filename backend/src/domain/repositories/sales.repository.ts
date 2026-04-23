@@ -11,12 +11,7 @@ export interface SalesRepository {
     filters?: any
   ): Promise<any>;
 
-  getRevenueTrend(
-    from: string,
-    to: string,
-    grain: string,
-    filters?: any
-  ): Promise<any>;
+  getRevenueTrend(from: string, to: string, grain: string, filters?: any): Promise<any>;
 
   getFilterOptions(): Promise<{
     states: any[];

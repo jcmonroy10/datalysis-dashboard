@@ -16,9 +16,9 @@ export async function salesByStateHandler(req: Request, res: Response) {
   };
 
   const filters = {
-    state:    toArray(req.query.state),
+    state: toArray(req.query.state),
     category: toArray(req.query.category),
-    status:   toArray(req.query.status),
+    status: toArray(req.query.status),
   };
 
   const data = await getSalesByState(repo, from as string, to as string, filters);

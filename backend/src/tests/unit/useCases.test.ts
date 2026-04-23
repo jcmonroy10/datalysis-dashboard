@@ -13,7 +13,6 @@ const mockRepo: jest.Mocked<SalesRepository> = {
 };
 
 describe("getKpis use case", () => {
-
   beforeEach(() => jest.clearAllMocks());
 
   it("calls repo.getKpis with correct params", async () => {
@@ -22,11 +21,9 @@ describe("getKpis use case", () => {
     const result = await getKpis(mockRepo, "2017-01-01", "2018-01-01", { status: ["delivered"] });
 
     expect(mockRepo.getKpis).toHaveBeenCalledTimes(1);
-    expect(mockRepo.getKpis).toHaveBeenCalledWith(
-      "2017-01-01",
-      "2018-01-01",
-      { status: ["delivered"] }
-    );
+    expect(mockRepo.getKpis).toHaveBeenCalledWith("2017-01-01", "2018-01-01", {
+      status: ["delivered"],
+    });
     expect(result).toEqual([{ gmv: 1000 }]);
   });
 
@@ -35,15 +32,15 @@ describe("getKpis use case", () => {
     const result = await getKpis(mockRepo, "2017-01-01", "2018-01-01");
     expect(result).toEqual([]);
   });
-
 });
 
 describe("getTopProducts use case", () => {
-
   beforeEach(() => jest.clearAllMocks());
 
   it("calls repo.getTopProducts with correct params", async () => {
-    mockRepo.getTopProducts.mockResolvedValue([{ product_category_name: "electronics", value: 5000 }]);
+    mockRepo.getTopProducts.mockResolvedValue([
+      { product_category_name: "electronics", value: 5000 },
+    ]);
 
     const result = await getTopProducts(mockRepo, "2017-01-01", "2018-01-01", "revenue", 10);
 
@@ -56,15 +53,15 @@ describe("getTopProducts use case", () => {
     );
     expect(result).toHaveLength(1);
   });
-
 });
 
 describe("getRevenueTrend use case", () => {
-
   beforeEach(() => jest.clearAllMocks());
 
   it("calls repo.getRevenueTrend with correct params", async () => {
-    mockRepo.getRevenueTrend.mockResolvedValue([{ period: "2017-01-01", revenue: 1000, orders: 10 }]);
+    mockRepo.getRevenueTrend.mockResolvedValue([
+      { period: "2017-01-01", revenue: 1000, orders: 10 },
+    ]);
 
     const result = await getRevenueTrend(mockRepo, "2017-01-01", "2018-01-01", "day");
 
@@ -76,5 +73,4 @@ describe("getRevenueTrend use case", () => {
     );
     expect(result).toHaveLength(1);
   });
-
 });

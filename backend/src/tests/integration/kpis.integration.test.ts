@@ -4,7 +4,6 @@ import { kpisHandler } from "../../adapters/http/kpis.controller";
 import { asyncHandler } from "../../adapters/http/middlewares/asyncHandler";
 import { errorHandler } from "../../adapters/http/middlewares/errorHandler";
 
-// Mock Prisma so no real DB connection is needed
 jest.mock("../../infrastructure/db/prisma", () => ({
   prisma: {
     $queryRawUnsafe: jest.fn().mockResolvedValue([
@@ -27,11 +26,8 @@ app.get("/api/kpis", asyncHandler(kpisHandler));
 app.use(errorHandler);
 
 describe("GET /api/kpis", () => {
-
   it("returns 200 with KPI data for valid date range", async () => {
-    const res = await request(app)
-      .get("/api/kpis")
-      .query({ from: "2017-01-01", to: "2018-01-01" });
+    const res = await request(app).get("/api/kpis").query({ from: "2017-01-01", to: "2018-01-01" });
 
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
@@ -44,12 +40,9 @@ describe("GET /api/kpis", () => {
     const { prisma } = require("../../infrastructure/db/prisma");
     prisma.$queryRawUnsafe.mockRejectedValueOnce(new Error("DB error"));
 
-    const res = await request(app)
-      .get("/api/kpis")
-      .query({ from: "2017-01-01", to: "2018-01-01" });
+    const res = await request(app).get("/api/kpis").query({ from: "2017-01-01", to: "2018-01-01" });
 
     expect(res.status).toBe(500);
     expect(res.body).toHaveProperty("error");
   });
-
 });

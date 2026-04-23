@@ -1,9 +1,8 @@
-import { prisma } from '../db/prisma';
-import { SalesRepository } from '../../domain/repositories/sales.repository';
-import { buildFilters } from '../db/buildFilters';
+import { prisma } from "../db/prisma";
+import { SalesRepository } from "../../domain/repositories/sales.repository";
+import { buildFilters } from "../db/buildFilters";
 
 export class PrismaSalesRepository implements SalesRepository {
-
   async getKpis(from: string, to: string, filters: any = {}) {
     const baseConditions = [`f.order_date BETWEEN $1::date AND $2::date`];
     const baseParams = [from, to];
@@ -54,13 +53,7 @@ export class PrismaSalesRepository implements SalesRepository {
     );
   }
 
-  async getTopProducts(
-    from: string,
-    to: string,
-    metric: string,
-    limit: number,
-    filters: any = {}
-  ) {
+  async getTopProducts(from: string, to: string, metric: string, limit: number, filters: any = {}) {
     const baseConditions = [`f.order_date BETWEEN $1::date AND $2::date`];
     const baseParams = [from, to];
 
@@ -68,11 +61,9 @@ export class PrismaSalesRepository implements SalesRepository {
     const whereClause = [...baseConditions, ...conditions].join(" AND ");
 
     const metricColumn =
-      metric === "revenue"
-        ? "SUM(f.payment_value_allocated)"
-        : "SUM(f.item_price)";
+      metric === "revenue" ? "SUM(f.payment_value_allocated)" : "SUM(f.item_price)";
 
-    const safeLimit = Math.min(Math.max(limit || 10, 1), 50); // 1–50
+    const safeLimit = Math.min(Math.max(limit || 10, 1), 50);
 
     return prisma.$queryRawUnsafe(
       `
@@ -94,12 +85,7 @@ export class PrismaSalesRepository implements SalesRepository {
     );
   }
 
-  async getRevenueTrend(
-    from: string,
-    to: string,
-    grain: string,
-    filters: any = {}
-  ) {
+  async getRevenueTrend(from: string, to: string, grain: string, filters: any = {}) {
     const baseConditions = [`f.order_date BETWEEN $1::date AND $2::date`];
     const baseParams = [from, to];
 
@@ -156,27 +142,21 @@ export class PrismaSalesRepository implements SalesRepository {
   }
 
   async getFilterOptions() {
-    const states = await prisma.$queryRaw<
-      { customer_state: string }[]
-    >`
+    const states = await prisma.$queryRaw<{ customer_state: string }[]>`
       SELECT DISTINCT c.customer_state
       FROM gold.fact_sales f
       JOIN gold.dim_customer c ON f.customer_id = c.customer_id
       ORDER BY c.customer_state
     `;
 
-    const categories = await prisma.$queryRaw<
-      { product_category_name: string }[]
-    >`
+    const categories = await prisma.$queryRaw<{ product_category_name: string }[]>`
       SELECT DISTINCT p.product_category_name
       FROM gold.fact_sales f
       JOIN gold.dim_product p ON f.product_id = p.product_id
       ORDER BY p.product_category_name
     `;
 
-    const statuses = await prisma.$queryRaw<
-      { order_status: string }[]
-    >`
+    const statuses = await prisma.$queryRaw<{ order_status: string }[]>`
       SELECT DISTINCT o.order_status
       FROM gold.fact_sales f
       JOIN gold.dim_order o ON f.order_id = o.order_id

@@ -15,5 +15,17 @@ export function validateDateRange(req: Request, res: Response, next: NextFunctio
     return res.status(400).json({ error: "Invalid date format (YYYY-MM-DD)" });
   }
 
+  if (new Date(from as string) >= new Date(to as string)) {
+    return res.status(400).json({ error: "'from' must be before 'to'" });
+  }
+
+  const limit = req.query["limit"];
+  if (limit !== undefined) {
+    const parsedLimit = Number(limit);
+    if (isNaN(parsedLimit) || parsedLimit < 1 || parsedLimit > 50) {
+      return res.status(400).json({ error: "limit must be between 1 and 50" });
+    }
+  }
+
   next();
 }

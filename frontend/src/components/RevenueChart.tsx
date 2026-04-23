@@ -32,7 +32,7 @@ export default function RevenueChart({ data }: any) {
           axisLine={false}
           tickLine={false}
           tick={{ fontSize: 12 }}
-          interval={30}  // muestra 1 tick cada 30 puntos
+          interval={30}  
           tickFormatter={(value) => {
             const date = new Date(value);
             return date.toLocaleDateString("en-US", { month: "short", year: "2-digit" });

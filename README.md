@@ -1,44 +1,37 @@
-# Datalysis Technical Test
+# Datalysis Dashboard
 
-## Stack
-- Frontend: Next.js (TypeScript)
-- Backend: Node.js + Express (TypeScript)
-- Database: PostgreSQL
-- ORM: Prisma (por definir)
-- Infraestructura: Docker Compose
-
-## Data Architecture
-
-Se implementaron tres capas de datos:
-
-- raw: datos originales cargados desde CSV
-- clean: datos procesados y normalizados
-- gold: modelo analítico en esquema estrella (Data Warehouse)
-
-## Data Source
-# Datalysis
-
-Business intelligence dashboard for revenue analytics, built with Next.js + Node.js + PostgreSQL.
+Dashboard de inteligencia de negocios para análisis de ventas, construido con Next.js + Node.js + PostgreSQL sobre una arquitectura de Data Warehouse (raw → clean → gold).
 
 ---
 
 ## URLs
 
-| Service   | URL                       |
+| Servicio  | URL                       |
 |-----------|---------------------------|
 | Frontend  | http://localhost:3000     |
 | Backend   | http://localhost:4000     |
-| API Base  | http://localhost:4000/api |
+| API Base  | http://localhost:4000     |
 
 ---
 
-## Architecture
+## Stack tecnológico
+
+| Capa           | Tecnología                                      |
+|----------------|-------------------------------------------------|
+| Frontend       | Next.js 14, TypeScript, Tailwind CSS, Recharts  |
+| Backend        | Node.js, Express, TypeScript, Prisma            |
+| Base de datos  | PostgreSQL 15                                   |
+| Infraestructura| Docker, Docker Compose                          |
+
+---
+
+## Arquitectura
 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                        Browser                          │
 │                   Next.js (port 3000)                   │
-│        Filters · KPI Cards · Charts · Table             │
+│        Filtros · KPI Cards · Gráficos · Tabla           │
 └───────────────────────┬─────────────────────────────────┘
                         │ HTTP REST (fetch)
                         ▼
@@ -47,11 +40,12 @@ Business intelligence dashboard for revenue analytics, built with Next.js + Node
 │                                                         │
 │  Controllers → Use Cases → Repository (Prisma)          │
 │                                                         │
-│  GET /api/kpis                                          │
-│  GET /api/revenue-trend                                 │
-│  GET /api/top-products                                  │
-│  GET /api/sales-by-state                                │
-│  GET /api/filter-options                                │
+│  GET /health                                            │
+│  GET /kpis                                              │
+│  GET /revenue-trend                                     │
+│  GET /top-products                                      │
+│  GET /sales-by-state                                    │
+│  GET /filters/options                                   │
 └───────────────────────┬─────────────────────────────────┘
                         │ SQL (Prisma $queryRawUnsafe)
                         ▼
@@ -65,38 +59,22 @@ Business intelligence dashboard for revenue analytics, built with Next.js + Node
 └─────────────────────────────────────────────────────────┘
 ```
 
-All services run in Docker containers orchestrated by `docker-compose.yml`.
+Todos los servicios corren en contenedores Docker orquestados por `docker-compose.yml`.
+
+El backend implementa **arquitectura hexagonal**:
+- `src/adapters/http` — controllers (kpis, revenueTrend, salesByState, topProducts, filterOptions) + middlewares (asyncHandler, errorHandler, validateQuery)
+- `src/application/use-cases` — casos de uso (getKpis, getRevenueTrend, getSalesByState, getTopProducts, getFilterOptions)
+- `src/domain/repositories` — interfaces de repositorios (ports)
+- `src/infrastructure/db` — cliente Prisma + buildFilters
+- `src/infrastructure/repositories` — implementación con Prisma (prismaSales.repository)
 
 ---
 
-## Stack
-
-| Layer          | Technology                                      |
-|----------------|-------------------------------------------------|
-| Frontend       | Next.js 14, TypeScript, Tailwind CSS, Recharts  |
-| Backend        | Node.js, Express, TypeScript, Prisma            |
-| Database       | PostgreSQL 15                                   |
-| Infrastructure | Docker, Docker Compose                          |
-
----
-
-## Getting Started
-
-### Prerequisites
-
-- Docker + Docker Compose
-- The following CSV files placed in `data/` at the project root:
-  - `orders.csv`
-  - `products.csv`
-  - `order_items.csv`
-  - `order_payments.csv`
-  - `customers.csv`
-
-### Project structure
+## Estructura del proyecto
 
 ```
-project/
-  data/                    ← CSV files here (not included in repo)
+datalysis-dashboard/
+  data/                    ← Archivos CSV del dataset Olist
     orders.csv
     products.csv
     order_items.csv
@@ -104,7 +82,7 @@ project/
     customers.csv
   backend/
     etl/
-      schema.sql           ← ETL script (raw → clean → gold)
+      schema.sql           ← Script ETL completo (raw → clean → gold)
     src/
     prisma/
   frontend/
@@ -113,39 +91,52 @@ project/
   README.md
 ```
 
-### Run the project
+---
+
+## Cómo ejecutar el proyecto
+
+### Requisitos previos
+
+- Docker + Docker Compose
+- Archivos CSV del dataset Olist ubicados en `data/` en la raíz del proyecto
+
+### Levantar el proyecto
 
 ```bash
-# 1. Start all containers
+# 1. Clonar el repositorio
+git clone https://github.com/jcmonroy10/datalysis-dashboard.git
+cd datalysis-dashboard
+
+# 2. Levantar los contenedores
 docker compose up -d
 
-# 2. Run ETL (only needed once — creates and populates the database)
+# 3. Ejecutar el ETL (solo una vez — crea y puebla la base de datos)
 docker cp backend/etl/schema.sql datalysis_db:/schema.sql
 docker exec -i datalysis_db psql -U postgres -d datalysis -f /schema.sql
 
-# 3. Open the dashboard
-open http://localhost:3000
+# 4. Abrir el dashboard
+http://localhost:3000
 ```
 
-### Re-running the ETL (reset)
+### Re-ejecutar el ETL (reset)
 
 ```bash
 docker exec -i datalysis_db psql -U postgres -d datalysis -c "
-DROP SCHEMA raw CASCADE;
-DROP SCHEMA clean CASCADE;
-DROP SCHEMA gold CASCADE;
+DROP SCHEMA IF EXISTS raw CASCADE;
+DROP SCHEMA IF EXISTS clean CASCADE;
+DROP SCHEMA IF EXISTS gold CASCADE;
 "
 
 docker cp backend/etl/schema.sql datalysis_db:/schema.sql
 docker exec -i datalysis_db psql -U postgres -d datalysis -f /schema.sql
 ```
 
-### Verify the ETL ran correctly
+### Verificar que el ETL corrió correctamente
 
 ```bash
 docker exec -it datalysis_db psql -U postgres -d datalysis
 
-\dn                                    -- should show raw, clean, gold
+\dn                                    -- debe mostrar raw, clean, gold
 SELECT COUNT(*) FROM gold.fact_sales;
 SELECT COUNT(*) FROM gold.dim_customer;
 SELECT COUNT(*) FROM gold.dim_product;
@@ -154,141 +145,147 @@ SELECT COUNT(*) FROM gold.dim_product;
 
 ---
 
-## Star Schema
+## Variables de entorno
 
-### Grain
+El backend usa las siguientes variables (ya configuradas en `docker-compose.yml`):
 
-One row per **order item** (`order_id` + `order_item_id`).
-
-### Dimension tables
-
-| Table | Key | Description |
-|---|---|---|
-| `gold.dim_customer` | `customer_id` | State and city per customer |
-| `gold.dim_product` | `product_id` | Product category name |
-| `gold.dim_order` | `order_id` | Order status and delivery timestamps |
-| `gold.dim_date` | `date` | Calendar table (year, month, day, weekday, week, is_weekend) |
-
-### Fact table: `gold.fact_sales`
-
-| Column | Type | Description |
-|---|---|---|
-| `order_id` | text | FK → dim_order |
-| `order_item_id` | int | Item position within the order |
-| `product_id` | text | FK → dim_product |
-| `customer_id` | text | FK → dim_customer |
-| `order_date` | date | FK → dim_date |
-| `item_price` | numeric | Unit price of the item |
-| `freight_value` | numeric | Freight cost for the item |
-| `payment_value_allocated` | numeric | Prorated share of order total payment |
-| `is_canceled` | int | 1 if order status is 'canceled' |
-| `is_delivered` | int | 1 if delivery date is not null |
-| `is_on_time` | int | 1 if delivered on or before estimated date |
+```env
+DATABASE_URL=postgresql://postgres:postgres@db:5432/datalysis
+```
 
 ---
 
-## KPI Definitions
+## Esquema Estrella (Star Schema)
 
-| KPI | Definition | Implementation |
+### Grain
+
+Una fila por **item de orden** (`order_id` + `order_item_id`).
+
+### Tablas de dimensiones
+
+| Tabla | Clave | Descripción |
 |---|---|---|
-| **GMV** | Gross Merchandise Value — total value of all items sold before payment adjustments | `SUM(item_price)` |
-| **Revenue** | Actual payment collected, prorated per item | `SUM(payment_value_allocated)` |
-| **Orders** | Count of unique orders in the period | `COUNT(DISTINCT order_id)` |
-| **AOV** | Average Order Value — revenue per order | `SUM(payment_value_allocated) / COUNT(DISTINCT order_id)` |
-| **IPO** | Items Per Order — average number of items per order | `COUNT(order_item_id) / COUNT(DISTINCT order_id)` |
-| **Cancel Rate** | Proportion of orders that were canceled or unavailable | `COUNT(DISTINCT order_id WHERE status IN ('canceled','unavailable')) / COUNT(DISTINCT order_id)` |
-| **On-time Rate** | Proportion of delivered orders that arrived on or before estimated date | `SUM(is_on_time) / SUM(is_delivered)` |
+| `gold.dim_customer` | `customer_id` | Estado y ciudad del cliente |
+| `gold.dim_product` | `product_id` | Categoría del producto |
+| `gold.dim_order` | `order_id` | Estado de la orden y timestamps de entrega |
+| `gold.dim_date` | `date` | Calendario completo (año, mes, día, semana, is_weekend) |
 
-### Payment value allocation
+### Tabla de hechos: `gold.fact_sales`
 
-Raw payments exist at the order level. An order can have multiple items and multiple payment rows. Assigning the full payment to each item would cause duplication.
+| Columna | Tipo | Descripción |
+|---|---|---|
+| `order_id` | text | FK → dim_order |
+| `order_item_id` | int | Posición del item dentro de la orden |
+| `product_id` | text | FK → dim_product |
+| `customer_id` | text | FK → dim_customer |
+| `order_date` | date | FK → dim_date |
+| `item_price` | numeric | Precio unitario del item |
+| `freight_value` | numeric | Costo de envío del item |
+| `payment_value_allocated` | numeric | Parte proporcional del pago total de la orden |
+| `is_canceled` | int | 1 si el status de la orden es 'canceled' |
+| `is_delivered` | int | 1 si la fecha de entrega no es null |
+| `is_on_time` | int | 1 si se entregó antes o en la fecha estimada |
 
-**Solution:** aggregate payments per order, then prorate by item price share:
+---
+
+## Definición de KPIs
+
+| KPI | Definición | Implementación SQL |
+|---|---|---|
+| **GMV** | Valor bruto de mercancía — suma de precios de items vendidos | `SUM(item_price)` |
+| **Revenue** | Pago real recibido, prorrateado por item | `SUM(payment_value_allocated)` |
+| **Orders** | Órdenes únicas en el período | `COUNT(DISTINCT order_id)` |
+| **AOV** | Valor promedio por orden | `SUM(payment_value_allocated) / COUNT(DISTINCT order_id)` |
+| **IPO** | Items promedio por orden | `COUNT(order_item_id) / COUNT(DISTINCT order_id)` |
+| **Cancel Rate** | Proporción de órdenes canceladas o no disponibles | `COUNT(DISTINCT order_id WHERE status IN ('canceled','unavailable')) / COUNT(DISTINCT order_id)` |
+| **On-time Rate** | Proporción de entregas realizadas a tiempo | `SUM(is_on_time) / SUM(is_delivered)` |
+
+> **Nota sobre Cancel Rate:** se incluyen tanto `canceled` como `unavailable` ya que ambos representan transacciones no completadas desde el punto de vista del negocio.
+
+### Asignación de payment_value a nivel item
+
+Los pagos en Olist existen a nivel de orden y una orden puede tener múltiples items y múltiples filas de pago. Asignar el pago completo a cada item causaría duplicación.
+
+**Solución:** se agregan los pagos por orden y luego se prorratean proporcionalmente al precio de cada item usando una window function:
 
 ```sql
--- Aggregate payments per order
+-- Paso 1: agregar pagos por orden
 LEFT JOIN (
   SELECT order_id, SUM(payment_value) AS total_payment
   FROM clean.order_payments
   GROUP BY order_id
 ) op ON oi.order_id = op.order_id
 
--- Prorate by item price share (window function)
+-- Paso 2: prorratear por proporción del precio del item
 (op.total_payment * oi.price / SUM(oi.price) OVER (PARTITION BY oi.order_id))
   AS payment_value_allocated
 ```
 
-This guarantees `SUM(payment_value_allocated)` across all items of an order equals `total_payment`, with zero duplication.
+Esto garantiza que `SUM(payment_value_allocated)` sobre todos los items de una orden sea igual a `total_payment`, sin duplicación.
 
 ---
 
-## Technical Decisions & Tradeoffs
+## Proceso ETL
 
-### `$queryRawUnsafe` instead of Prisma ORM
+El pipeline corre en tres etapas: **raw → clean → gold**.
 
-Prisma's query builder doesn't support dynamic `IN` clauses with variable-length arrays or window functions like `SUM() OVER (PARTITION BY ...)`. Using `$queryRawUnsafe` gives full SQL control for complex analytical queries. The tradeoff is losing Prisma's type safety on the query itself, mitigated by validating and sanitizing all filter inputs in `buildFilters.ts` before they reach the query.
+### Etapa 1 — Raw (tablas fuente)
 
-### ETL as a single SQL script
+Tablas cargadas directamente desde CSV sin transformación usando `COPY` de PostgreSQL:
 
-The entire pipeline (raw → clean → gold) lives in `etl/schema.sql` and is run once via `psql`. The alternative would be a Node.js orchestrator running queries step by step, but for a dataset of this size a single SQL file is simpler, faster, and easier to audit. The tradeoff is that re-running requires manually dropping schemas first.
-
-### Debounced filters (500ms)
-
-Filter changes in the frontend are debounced 500ms before triggering API calls. This avoids sending a request on every keystroke or dropdown click when the user is still selecting options. The tradeoff is a small perceived delay, which is acceptable given the analytical nature of the dashboard.
-
-### Dual Y-axis chart
-
-Revenue and Orders are shown on the same chart with separate Y-axes because their scales differ by orders of magnitude. A single Y-axis would flatten the Orders line making it unreadable. The tradeoff is slightly more complex chart configuration.
-
-### Comma-separated filter params
-
-Filters are sent as comma-separated query strings (`?status=delivered,canceled`) rather than repeated keys (`?status=delivered&status=canceled`). This simplifies URL construction on the frontend. The tradeoff is that the backend must parse and split the string in each controller, handled by a shared `toArray()` utility.
-
----
-
-## ETL Process
-
-The pipeline runs in three stages: **raw → clean → gold**.
-
-### Stage 1 — Raw
-
-Tables loaded directly from CSV with no transformation via PostgreSQL `COPY`.
-
-Tables: `raw.orders`, `raw.order_items`, `raw.order_payments`, `raw.customers`, `raw.products`
-
-### Stage 2 — Clean
-
-| Rule | Detail |
+| Tabla | Descripción |
 |---|---|
-| Timestamp → Date | `order_purchase_timestamp::DATE` as `order_date` |
-| Drop unused columns | Removed seller info, zip codes, product dimensions, payment metadata |
-| Category normalization | Only `product_id` + `product_category_name` kept |
+| `raw.orders` | Cabeceras de órdenes con timestamps y status |
+| `raw.order_items` | Items por orden (producto, precio, flete) |
+| `raw.order_payments` | Pagos por orden (puede haber múltiples filas) |
+| `raw.customers` | Datos de ubicación del cliente (ciudad, estado) |
+| `raw.products` | Catálogo de productos con categorías |
 
-### Stage 3 — Gold
+> **¿Por qué raw tiene todas las columnas?** Porque raw replica fielmente la fuente de datos sin transformaciones. Las transformaciones se aplican en clean y gold para mantener trazabilidad y separación de responsabilidades.
 
-Star schema built from clean tables. See [Star Schema](#star-schema) section above.
+### Etapa 2 — Clean (reglas de limpieza)
+
+| Regla | Detalle |
+|---|---|
+| Timestamp → Date | `order_purchase_timestamp::DATE` extraído como `order_date` |
+| Eliminar columnas no usadas | Se removieron seller info, códigos postales, dimensiones de productos, metadata de pagos |
+| Normalización de categorías | Solo se conserva `product_id` + `product_category_name` |
+
+> En clean aún no se calculan KPIs, solo se deja la data "usable" para el modelo analítico.
+
+### Etapa 3 — Gold
+
+Esquema estrella construido desde las tablas clean. Ver sección Esquema Estrella.
 
 ---
 
 ## API Endpoints
 
-All endpoints accept:
+Todos los endpoints aceptan los siguientes query params:
 
-| Param | Type | Example |
+| Param | Tipo | Ejemplo |
 |---|---|---|
-| `from` | date | `2017-01-01` |
-| `to` | date | `2018-01-01` |
-| `state` | comma-separated string | `SP,RJ` |
-| `category` | comma-separated string | `informatica_acessorios` |
-| `status` | comma-separated string | `delivered,canceled` |
+| `from` | fecha | `2017-01-01` |
+| `to` | fecha | `2018-01-01` |
+| `state` | string separado por comas | `SP,RJ` |
+| `category` | string separado por comas | `informatica_acessorios` |
+| `status` | string separado por comas | `delivered,canceled` |
 
-| Endpoint | Description |
+| Endpoint | Descripción |
 |---|---|
-| `GET /api/kpis` | All 7 KPIs for the selected period and filters |
-| `GET /api/revenue-trend` | Revenue + orders over time (daily or weekly grain) |
-| `GET /api/top-products` | Top categories ranked by GMV or Revenue |
-| `GET /api/sales-by-state` | Revenue and orders aggregated by customer state |
-| `GET /api/filter-options` | Available values for state, category, and status dropdowns |
+| `GET /health` | Health check del servidor |
+| `GET /kpis` | Los 7 KPIs para el período y filtros seleccionados |
+| `GET /revenue-trend` | Revenue + órdenes en el tiempo (granularidad diaria o semanal) |
+| `GET /top-products` | Top categorías por GMV o Revenue |
+| `GET /sales-by-state` | Revenue y órdenes por estado del cliente |
+| `GET /filters/options` | Valores disponibles para los dropdowns de filtros |
+
+### Validaciones
+
+- `from` y `to` son obligatorios → 400 si faltan
+- Formato de fecha válido → 400 si es inválido
+- `from` debe ser anterior a `to` → 400 si no se cumple
+- `limit` entre 1 y 50 → 400 si está fuera de rango
 
 ---
 
@@ -299,26 +296,54 @@ cd backend
 npm test
 ```
 
-| File | Type | Tests |
+| Archivo | Tipo | Tests |
 |---|---|---|
-| `buildFilters.test.ts` | Unit | 5 — empty filters, single value, multiple values, combined filters, empty arrays |
-| `useCases.test.ts` | Unit | 3 — getKpis, getTopProducts, getRevenueTrend with mocked repo |
-| `kpis.integration.test.ts` | Integration | 2 — 200 with valid data, 500 on DB error |
+| `buildFilters.test.ts` | Unitario | 5 — filtros vacíos, valor único, múltiples valores, filtros combinados, arrays vacíos ignorados |
+| `useCases.test.ts` | Unitario | 3 — getKpis, getTopProducts, getRevenueTrend con repo mockeado |
+| `kpis.integration.test.ts` | Integración | 2 — 200 con datos válidos, 500 con error de DB |
 
 ---
 
-## Linting & Formatting
+## Linting y Formateo
 
 ```bash
 cd backend
 npm run lint      # ESLint
 npm run format    # Prettier
 ```
-Dataset utilizado: Brazilian E-Commerce Public Dataset by Olist.
 
-Se cargaron los siguientes archivos en el esquema raw:
-- orders
-- order_items
-- order_payments
-- customers
-- products
+---
+
+## Decisiones técnicas y tradeoffs
+
+### `$queryRawUnsafe` en vez de Prisma ORM
+
+El query builder de Prisma no soporta cláusulas `IN` dinámicas con arrays de longitud variable ni window functions como `SUM() OVER (PARTITION BY ...)`. Usar `$queryRawUnsafe` da control total sobre SQL para queries analíticas complejas. El tradeoff es perder el type safety de Prisma en el query, mitigado validando y sanitizando todos los inputs en `buildFilters.ts` antes de que lleguen al query.
+
+> Usar Prisma como gestor de conexión y SQL directo para analytics es la combinación correcta: permite optimizar agregaciones y joins complejos manteniendo seguridad contra SQL injection mediante parámetros posicionales.
+
+### ETL como script SQL único
+
+Todo el pipeline (raw → clean → gold) vive en `etl/schema.sql` y se ejecuta una vez vía `psql`. La alternativa sería un orquestador Node.js ejecutando queries paso a paso, pero para este tamaño de dataset un solo archivo SQL es más simple, rápido y fácil de auditar. El tradeoff es que re-ejecutarlo requiere dropear los schemas manualmente.
+
+### Filtros debounced (500ms)
+
+Los cambios de filtros en el frontend se debouncean 500ms antes de disparar llamadas a la API. Esto evita enviar una request en cada click o keystroke cuando el usuario todavía está seleccionando opciones. El tradeoff es un pequeño delay percibido, aceptable dado el contexto analítico del dashboard.
+
+### Gráfico con doble eje Y
+
+Revenue y Orders se muestran en el mismo gráfico con ejes Y separados porque sus escalas difieren en órdenes de magnitud. Un solo eje Y aplastaría la línea de Orders haciéndola ilegible. El tradeoff es una configuración de gráfico ligeramente más compleja.
+
+### Filtros como query params separados por comas
+
+Los filtros se envían como strings separados por comas (`?status=delivered,canceled`) en vez de keys repetidos (`?status=delivered&status=canceled`). Esto simplifica la construcción de la URL en el frontend. El tradeoff es que el backend debe parsear y separar el string en cada controller, manejado por una utilidad `toArray()` compartida.
+
+### Compatibilidad Prisma + Node en Docker
+
+Se detectó incompatibilidad entre Prisma y Node 18 en Docker. Se resolvió actualizando la imagen base a Node 20 para cumplir los requisitos del runtime de Prisma.
+
+---
+
+## Autor
+
+Juan Carlos Monroy

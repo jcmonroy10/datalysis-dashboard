@@ -15,6 +15,11 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d datalysis"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build: ./backend
@@ -22,13 +27,19 @@ services:
     ports:
       - "4000:4000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/datalysis
     volumes:
       - ./backend:/app
       - backend_node_modules:/app/node_modules
     command: sh -c "npm install && npm run dev"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:4000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
 
   frontend:
     build: ./frontend
@@ -36,7 +47,8 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:4000
       INTERNAL_API_URL: http://backend:4000
@@ -44,6 +56,11 @@ services:
       - ./frontend:/app
       - frontend_node_modules:/app/node_modules
     command: sh -c "npm install && npm run dev"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
 
 volumes:
   postgres_data:

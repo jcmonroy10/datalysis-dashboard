@@ -132,7 +132,6 @@ export default function Filters({ onChange, onClear, initialValues }: any) {
     fetchFilters().then(setOptions);
   }, []);
 
-  // ✅ FIX: compara antes de setSelected para evitar infinite loop
   useEffect(() => {
     if (!initialValues) return;
 
@@ -151,7 +150,6 @@ export default function Filters({ onChange, onClear, initialValues }: any) {
       const sameCategory = JSON.stringify(prev.category) === JSON.stringify(newCategory);
       const sameStatus   = JSON.stringify(prev.status)   === JSON.stringify(newStatus);
 
-      // Si no cambió nada, devuelve el mismo objeto → React no re-renderiza
       if (sameState && sameCategory && sameStatus) return prev;
 
       return { state: newState, category: newCategory, status: newStatus };

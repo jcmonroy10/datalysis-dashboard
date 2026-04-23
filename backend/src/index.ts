@@ -1,28 +1,28 @@
-import express from 'express';
+import express from "express";
 import cors from "cors";
-import { kpisHandler } from './adapters/http/kpis.controller';
-import { topProductsHandler } from './adapters/http/topProducts.controller';
-import { salesByStateHandler } from './adapters/http/salesByState.controller';
-import { revenueTrendHandler } from './adapters/http/revenueTrend.controller';
-import { filterOptionsHandler } from './adapters/http/filterOptions.controller';
+import { kpisHandler } from "./adapters/http/kpis.controller";
+import { topProductsHandler } from "./adapters/http/topProducts.controller";
+import { salesByStateHandler } from "./adapters/http/salesByState.controller";
+import { revenueTrendHandler } from "./adapters/http/revenueTrend.controller";
+import { filterOptionsHandler } from "./adapters/http/filterOptions.controller";
 
-import { validateDateRange } from './adapters/http/middlewares/validateQuery';
-import { errorHandler } from './adapters/http/middlewares/errorHandler';
-import { asyncHandler } from './adapters/http/middlewares/asyncHandler';
+import { validateDateRange } from "./adapters/http/middlewares/validateQuery";
+import { errorHandler } from "./adapters/http/middlewares/errorHandler";
+import { asyncHandler } from "./adapters/http/middlewares/asyncHandler";
 
 const app = express();
 app.use(express.json());
-
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
-});
 app.use(cors());
 
-app.get('/filters/options', asyncHandler(filterOptionsHandler));
-app.get('/kpis', validateDateRange, asyncHandler(kpisHandler));
-app.get('/top-products', validateDateRange, asyncHandler(topProductsHandler));
-app.get('/sales-by-state', validateDateRange, asyncHandler(salesByStateHandler));
-app.get('/revenue-trend', validateDateRange, asyncHandler(revenueTrendHandler));
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" });
+});
+
+app.get("/filters/options", asyncHandler(filterOptionsHandler));
+app.get("/kpis", validateDateRange, asyncHandler(kpisHandler));
+app.get("/top-products", validateDateRange, asyncHandler(topProductsHandler));
+app.get("/sales-by-state", validateDateRange, asyncHandler(salesByStateHandler));
+app.get("/revenue-trend", validateDateRange, asyncHandler(revenueTrendHandler));
 
 app.use(errorHandler);
 

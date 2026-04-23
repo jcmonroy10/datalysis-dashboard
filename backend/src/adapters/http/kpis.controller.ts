@@ -1,13 +1,13 @@
-import { Request, Response } from 'express';
-import { getKpis } from '../../application/use-cases/getKpis';
-import { PrismaSalesRepository } from '../../infrastructure/repositories/prismaSales.repository';
-import { serializeBigInt } from '../../utils/serialize';
+import { Request, Response } from "express";
+import { getKpis } from "../../application/use-cases/getKpis";
+import { PrismaSalesRepository } from "../../infrastructure/repositories/prismaSales.repository";
+import { serializeBigInt } from "../../utils/serialize";
 
 const repo = new PrismaSalesRepository();
 
 export async function kpisHandler(req: Request, res: Response) {
   const { from, to } = req.query;
-  
+
   const toArray = (val: any): string[] => {
     if (!val) return [];
     if (Array.isArray(val)) return (val as string[]).filter(Boolean);
@@ -16,9 +16,9 @@ export async function kpisHandler(req: Request, res: Response) {
   };
 
   const filters = {
-    state:    toArray(req.query.state),
+    state: toArray(req.query.state),
     category: toArray(req.query.category),
-    status:   toArray(req.query.status),
+    status: toArray(req.query.status),
   };
 
   const data = await getKpis(repo, from as string, to as string, filters);

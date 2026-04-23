@@ -16,12 +16,19 @@ export async function topProductsHandler(req: Request, res: Response) {
   };
 
   const filters = {
-    state:    toArray(req.query.state),
+    state: toArray(req.query.state),
     category: toArray(req.query.category),
-    status:   toArray(req.query.status),
+    status: toArray(req.query.status),
   };
 
-  const data = await getTopProducts(repo, from as string, to as string, metric as string, Number(limit), filters);
+  const data = await getTopProducts(
+    repo,
+    from as string,
+    to as string,
+    metric as string,
+    Number(limit),
+    filters
+  );
 
   const normalized = serializeBigInt(data);
 
