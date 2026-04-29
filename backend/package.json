@@ -2,7 +2,6 @@
   "name": "backend",
   "version": "1.0.0",
   "main": "index.js",
-  "type": "module",
   "scripts": {
     "dev": "ts-node-dev src/index.ts",
     "test": "jest",
@@ -34,7 +33,7 @@
     "ts-jest": "^29.4.9",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^6.0.3",
+    "typescript": "6.0.3",
     "typescript-eslint": "^8.59.0"
   }
 }

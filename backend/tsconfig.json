@@ -38,7 +38,7 @@
     "esModuleInterop": true,
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
-    "moduleDetection": "force",
+    //"moduleDetection": "force",
     "skipLibCheck": true,
   }
 }

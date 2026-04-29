@@ -24,6 +24,11 @@ import Filters from "../components/Filters";
 import RevenueChart from "../components/RevenueChart";
 import TopProductsTable from "../components/TopProductsTable";
 
+const today = new Date();
+const thirtyDaysAgo = new Date();
+thirtyDaysAgo.setDate(today.getDate() - 30);
+const formatDate = (d: Date) => d.toISOString().split("T")[0];
+
 export default function Home() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -40,9 +45,15 @@ export default function Home() {
 
   const [metric, setMetric] = useState<"gmv" | "revenue">("revenue");
 
+  const today = new Date();
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(today.getDate() - 30);
+
+  const formatDate = (d: Date) => d.toISOString().split("T")[0];
+
   const [dateRange, setDateRange] = useState({
-    from: "",
-    to: "",
+    from: formatDate(thirtyDaysAgo),
+    to: formatDate(today),
   });
 
   const [debouncedBaseQuery, setDebouncedBaseQuery] = useState("");
@@ -68,8 +79,8 @@ export default function Home() {
     });
     setFilters(newFilters);
     setDateRange({
-      from: params.get("from") || "",
-      to: params.get("to") || "",
+      from: params.get("from") || formatDate(thirtyDaysAgo),
+      to: params.get("to") || formatDate(today),
     });
   }, []);
 
@@ -83,8 +94,12 @@ export default function Home() {
     router.replace(`?${params.toString()}`);
   }, [filters, dateRange, router]);
 
-  const baseQuery = useMemo(() => {
+    const baseQuery = useMemo(() => {
     if (!dateRange.from || !dateRange.to) return "";
+    if (dateRange.from >= dateRange.to) return "";
+    
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(dateRange.from) || !dateRegex.test(dateRange.to)) return "";
 
     const params = new URLSearchParams();
     params.append("from", dateRange.from);
@@ -177,7 +192,7 @@ export default function Home() {
 
   const handleClear = () => {
     setFilters({});
-    setDateRange({ from: "", to: "" });
+    setDateRange({ from: formatDate(thirtyDaysAgo), to: formatDate(today) });
     router.replace("?");
   };
 
