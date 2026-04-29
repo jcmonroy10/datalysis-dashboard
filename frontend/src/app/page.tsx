@@ -27,7 +27,6 @@ import TopProductsTable from "../components/TopProductsTable";
 const today = new Date();
 const thirtyDaysAgo = new Date();
 thirtyDaysAgo.setDate(today.getDate() - 30);
-const formatDate = (d: Date) => d.toISOString().split("T")[0];
 
 export default function Home() {
   const router = useRouter();
@@ -49,7 +48,12 @@ export default function Home() {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(today.getDate() - 30);
 
-  const formatDate = (d: Date) => d.toISOString().split("T")[0];
+  const formatDate = (d: Date) => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
 
   const [dateRange, setDateRange] = useState({
     from: formatDate(thirtyDaysAgo),
@@ -94,6 +98,17 @@ export default function Home() {
     router.replace(`?${params.toString()}`);
   }, [filters, dateRange, router]);
 
+  useEffect(() => {
+    if (!dateRange.from || !dateRange.to) {
+      setError(null);
+      return;
+    }
+    if (dateRange.from >= dateRange.to) {
+      setError("La fecha 'From' debe ser anterior a la fecha 'To'");
+    } else {
+      setError(null);
+    }
+  }, [dateRange]);
     const baseQuery = useMemo(() => {
     if (!dateRange.from || !dateRange.to) return "";
     if (dateRange.from >= dateRange.to) return "";
@@ -275,6 +290,7 @@ export default function Home() {
                 {error}
               </div>
             )}
+          <div className={`${error ? "opacity-40 pointer-events-none select-none" : ""} space-y-10`}>
 
             {/* KPI */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -394,6 +410,7 @@ export default function Home() {
               </div>
 
             </div>
+          </div>
           </>
         )}
       </div>
